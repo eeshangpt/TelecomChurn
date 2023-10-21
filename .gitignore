@@ -3,3 +3,4 @@ input/**
 venv/**
 *.zip
 .ipynb_checkpoints/**
+*.pdf

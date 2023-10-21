@@ -16,19 +16,11 @@
 # %% [markdown] papermill={"duration": 0.036252, "end_time": "2021-08-13T07:16:36.548737", "exception": false, "start_time": "2021-08-13T07:16:36.512485", "status": "completed"}
 # # Telecom Churn Prediction - Starter Notebook
 #
-# **Author:** Akshay Sehgal (www.akshaysehgal.com)
-
-# %% [markdown] papermill={"duration": 0.035836, "end_time": "2021-08-13T07:16:36.620553", "exception": false, "start_time": "2021-08-13T07:16:36.584717", "status": "completed"}
-# The goal of this notebook is to provide an overview of how write a notebook and create a submission file that successfully solves the churn prediction problem. Please download the datasets, unzip and place them in the same folder as this notebook.
-#
-# We are going to follow the process called CRISP-DM.
-#
-# <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/CRISP-DM_Process_Diagram.png/639px-CRISP-DM_Process_Diagram.png" style="height: 400px; width:400px;"/>
-#
-# After Business and Data Understanding via EDA, we want to prepare data for modelling. Then evaluate and submit our predictions.
+# **Author:** Eeshan Gupta  
+# eeshangpt@gmail.com
 
 # %% [markdown] papermill={"duration": 0.034552, "end_time": "2021-08-13T07:16:36.690028", "exception": false, "start_time": "2021-08-13T07:16:36.655476", "status": "completed"}
-# # 0. Problem statement
+# ## Problem statement
 #
 # In the telecom industry, customers are able to choose from multiple service providers and actively switch from one operator to another. In this highly competitive market, the telecommunications industry experiences an average of 15-25% annual churn rate. Given the fact that it costs 5-10 times more to acquire a new customer than to retain an existing one, customer retention has now become even more important than customer acquisition.
 #
@@ -49,43 +41,54 @@
 #
 # 3. <u>The ‘churn’ phase:</u> In this phase, the customer is said to have churned. In this case, since you are working over a four-month window, the first two months are the ‘good’ phase, the third month is the ‘action’ phase, while the fourth month (September) is the ‘churn’ phase.
 
+# %% [markdown]
+# ## Table of Content
+# 1. A
+#     2. V
+#         3. B
+#     4. A
+# 1. A
+#     2. V
+#         3. B
+#     4. A
+# 1. A
+#     2. V
+#         3. B
+#     4. A
+
 # %% [markdown] papermill={"duration": 0.034501, "end_time": "2021-08-13T07:16:36.760335", "exception": false, "start_time": "2021-08-13T07:16:36.725834", "status": "completed"}
-# # 1. Loading dependencies & datasets
-#
-# Lets start by loading our dependencies. We can keep adding any imports to this cell block, as we write mode and mode code.
+# ## Loading datasets
+
+# %% [markdown]
+# Importing Libraries
 
 # %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
-#Data Structures
 import pandas as pd
 import numpy as np
 import re
 import os
 
-### For installing missingno library, type this command in terminal
-#pip install missingno
-
-import missingno as msno
-
-#Sklearn
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import confusion_matrix, precision_score, recall_score
+# from sklearn.impute import SimpleImputer
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.model_selection import train_test_split
+# from sklearn.ensemble import RandomForestClassifier
+# from sklearn.decomposition import PCA
+# from sklearn.manifold import TSNE
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.pipeline import Pipeline
+# from sklearn.model_selection import GridSearchCV
+# from sklearn.metrics import confusion_matrix, precision_score, recall_score
 
 #Plotting
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
 #Others
 import warnings
+
 warnings.filterwarnings('ignore')
+sns.set_style('darkgrid')
 
 # %matplotlib inline
 
