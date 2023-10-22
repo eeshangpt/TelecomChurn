@@ -19,6 +19,18 @@
 # **Author:** Eeshan Gupta  
 # eeshangpt@gmail.com
 
+# %% [markdown]
+# ## Table of Content
+# 1. [Problem Statememt](#Problem-statement)
+# 2. A
+#     2. V
+#         3. B
+#     4. A
+# 1. A
+#     2. V
+#         3. B
+#     4. A
+
 # %% [markdown] papermill={"duration": 0.034552, "end_time": "2021-08-13T07:16:36.690028", "exception": false, "start_time": "2021-08-13T07:16:36.655476", "status": "completed"}
 # ## Problem statement
 #
@@ -41,33 +53,25 @@
 #
 # 3. <u>The ‘churn’ phase:</u> In this phase, the customer is said to have churned. In this case, since you are working over a four-month window, the first two months are the ‘good’ phase, the third month is the ‘action’ phase, while the fourth month (September) is the ‘churn’ phase.
 
-# %% [markdown]
-# ## Table of Content
-# 1. A
-#     2. V
-#         3. B
-#     4. A
-# 1. A
-#     2. V
-#         3. B
-#     4. A
-# 1. A
-#     2. V
-#         3. B
-#     4. A
-
 # %% [markdown] papermill={"duration": 0.034501, "end_time": "2021-08-13T07:16:36.760335", "exception": false, "start_time": "2021-08-13T07:16:36.725834", "status": "completed"}
 # ## Loading datasets
 
 # %% [markdown]
 # Importing Libraries
 
-# %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
-import pandas as pd
-import numpy as np
-import re
+# %%
 import os
+import re
+import warnings
+from os import getcwd
+from os.path import join, isfile
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+# %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
 # from sklearn.impute import SimpleImputer
 # from sklearn.preprocessing import StandardScaler
 # from sklearn.model_selection import train_test_split
@@ -79,14 +83,7 @@ import os
 # from sklearn.model_selection import GridSearchCV
 # from sklearn.metrics import confusion_matrix, precision_score, recall_score
 
-#Plotting
-import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
-
-#Others
-import warnings
-
+# %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
 warnings.filterwarnings('ignore')
 sns.set_style('darkgrid')
 
@@ -186,7 +183,7 @@ data.info(verbose=1)
 data.describe(include="all")
 
 # %% [markdown] papermill={"duration": 0.03869, "end_time": "2021-08-13T07:16:41.929599", "exception": false, "start_time": "2021-08-13T07:16:41.890909", "status": "completed"}
-# # 2. Create X, y and then Train test split
+# ## Create X, y and then Train test split
 #
 # Lets create X and y datasets and skip "circle_id" since it has only 1 unique value
 
@@ -211,7 +208,7 @@ X_train.shape, X_test.shape, y_train.shape, y_test.shape
 X_train.head()
 
 # %% [markdown] papermill={"duration": 0.039575, "end_time": "2021-08-13T07:16:42.482838", "exception": false, "start_time": "2021-08-13T07:16:42.443263", "status": "completed"}
-# # 3. Handling Missing data
+# ## Handling Missing data
 #
 # First lets analyse the missing data. We can use missingno library for quick visualizations.
 
@@ -267,7 +264,7 @@ msno.bar(X_train_filtered)
 X_train_filtered.describe()
 
 # %% [markdown] papermill={"duration": 0.047951, "end_time": "2021-08-13T07:16:47.301731", "exception": false, "start_time": "2021-08-13T07:16:47.253780", "status": "completed"}
-# # 4. Exploratory Data Analysis & Preprocessing
+# ## Exploratory Data Analysis & Preprocessing
 #
 # Lets start by analysing the univariate distributions of each feature.
 
@@ -331,7 +328,7 @@ sns.heatmap(pd.DataFrame(X_train_filtered2, columns=new_vars).corr())
 sns.histplot(y_train)
 
 # %% [markdown] papermill={"duration": 0.054582, "end_time": "2021-08-13T07:16:51.952415", "exception": false, "start_time": "2021-08-13T07:16:51.897833", "status": "completed"}
-# # 5. Feature engineering and selection
+# ## Feature engineering and selection
 #
 # Let's understand feature importances for raw features as well as components to decide top features for modelling.
 
@@ -381,7 +378,7 @@ plt.xticks(rotation=45)
 plt.bar(feature_importances['col'], feature_importances['importance'])
 
 # %% [markdown] papermill={"duration": 0.065189, "end_time": "2021-08-13T07:17:21.113066", "exception": false, "start_time": "2021-08-13T07:17:21.047877", "status": "completed"}
-# # 6. Model building
+# ## Model building
 #
 # Let's build a quick model with logistic regression and the first 2 PCA components.
 
@@ -445,7 +442,7 @@ precision_score(y_test, pipe.predict(X_test[new_vars]))
 recall_score(y_test, pipe.predict(X_test[new_vars]))
 
 # %% [markdown] papermill={"duration": 0.067672, "end_time": "2021-08-13T07:17:24.385001", "exception": false, "start_time": "2021-08-13T07:17:24.317329", "status": "completed"}
-# # 7. Creating submission file
+# ## Creating submission file
 #
 # For submission, we need to make sure that the format is exactly the same as the sample.csv file. It contains 2 columns, id and churn_probability
 
