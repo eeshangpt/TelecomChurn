@@ -294,18 +294,26 @@ models = [
 
 # %%
 models = {
-    1: [RandomForestClassifier(), {
-        "n_estimators": [10, 20, 50, 100],
-        "criterion": ['gini', 'entropy'],
-        "min_samples_split": [2, 5, 10],
-        "min_samples_leaf": [1, 5, 9],
-        "max_features": ["sqrt", "log2", None],
-        "bootstrap": [True],
-        "oob_score": [f1_score],
-        "random_state": [0],
-        "verbose": [True],
-        "warm_start": [False],
-        "class_weight": ["balanced", "balanced_subsample", None]}]
+    2: [
+        LogisticRegression(),
+        {
+            'penalty': ['l1', 'l2', None],
+            'class_weight': ['balanced', None]
+        }
+    ],
+    1: [
+        RandomForestClassifier(), 
+        {
+            "n_estimators": [100, 200, 500],
+            "criterion": ['gini'],
+            "min_samples_split": [5, 10],
+            "min_samples_leaf": [5, 9],
+            "bootstrap": [True],
+            "oob_score": [f1_score],
+            "class_weight": ["balanced", None],
+            "n_jobs": [2]
+        }
+    ], 
 }
 
 # %%
@@ -316,9 +324,12 @@ pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
 
 # %%
 for model_id, model_details in models.items():
-    print('==========', model_id, sep='\n')
-    clf = GridSearchCV(estimator=model_details[0], param_grid=model_details[1], n_jobs=4, verbose=1)
+    clf = GridSearchCV(estimator=model_details[0],
+                       param_grid=model_details[1],
+                       scoring='f1',
+                       n_jobs=4, verbose=1)
     clf.fit(pca_x_trn, y_trn)
+    print('==========', model_id, sep='\n')
     print(f"{clf.best_params_}", f"{clf.best_score_}", sep='\n')
     print("==========")
 
