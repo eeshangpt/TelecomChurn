@@ -75,6 +75,18 @@ import seaborn as sns
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
+# %%
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression, Lasso
+from sklearn.svm import SVC, LinearSVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
+
+# %%
+from pprint import pprint
+
 # %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
 # from sklearn.impute import SimpleImputer
 # from sklearn.preprocessing import StandardScaler
@@ -261,48 +273,54 @@ y = y[pd.Series(a) < 10]
 # %%
 data.head()
 
-# %%
-from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC, LinearSVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
+# %% [raw]
+# models = [
+#     RandomForestClassifier(n_estimators=50, min_samples_leaf=10,
+#                            min_samples_split=20, verbose=True,
+#                            class_weight='balanced', random_state=0,
+#                            n_jobs=-4),
+#     RandomForestClassifier(verbose=True, random_state=0, n_jobs=-4),
+#     
+# ]
 
 # %%
-from pprint import pprint
+# ?GradientBoostingClassifier
 
 # %%
-X_trn, X_val, y_trn, y_val = train_test_split(data, y, train_size=0.8, random_state=0)
-
-# %%
-strat_k_folds = StratifiedKFold(n_splits=10)
-
-# %%
-models = [
-    RandomForestClassifier(n_estimators=50, min_samples_leaf=10,
-                           min_samples_split=20, verbose=True,
-                           class_weight='balanced', random_state=0,
-                           n_jobs=-4),
-    RandomForestClassifier(verbose=True, random_state=0, n_jobs=-4),
-    
-]
-
-# %%
-# ?RandomForestClassifier
+{
+            "loss": ['log_loss', 'exponential'],
+            "learning_rate": list(set(np.linspace(0, 1, 6).tolist() + np.linspace(0, 10, 6).tolist()))
+        }
 
 # %%
 models = {
+    4: [
+        SVC(),
+        {
+            'kernel' : ['linear', 'poly', 'rbf', 'sigmoid'],
+            'degree': [3, 5, 7, 9, 10],
+            'gamma': ['scale', 'auto'],
+            'probability': [True],
+            'class_weight': ['balanced']
+        }
+    ],
+    3 : [
+        GradientBoostingClassifier(),
+        {
+            "loss": ['log_loss', 'exponential'],
+            "learning_rate": list(set(np.linspace(0, 1, 6).tolist() + np.linspace(0, 10, 6).tolist())),
+            "n_estimators": [100, 200, 300, 500],
+        }
+    ],
     2: [
         LogisticRegression(),
         {
             'penalty': ['l1', 'l2', None],
-            'class_weight': ['balanced', None]
+            'class_weight': ['balanced', None],
         }
     ],
     1: [
-        RandomForestClassifier(), 
+        RandomForestClassifier(), dict()
         {
             "n_estimators": [100, 200, 500],
             "criterion": ['gini'],
@@ -327,11 +345,26 @@ for model_id, model_details in models.items():
     clf = GridSearchCV(estimator=model_details[0],
                        param_grid=model_details[1],
                        scoring='f1',
-                       n_jobs=4, verbose=1)
+                       n_jobs=4, verbose=True)
     clf.fit(pca_x_trn, y_trn)
     print('==========', model_id, sep='\n')
     print(f"{clf.best_params_}", f"{clf.best_score_}", sep='\n')
     print("==========")
+
+# %%
+models = [
+    RandomForestClassifier(
+        bootstrap=True, class_weight='balanced', criterion='gini',
+        min_samples_leaf=9, min_samples_split=10,
+        n_estimators=100, oob_score=f1_score
+    )
+]
+
+# %%
+X_trn, X_val, y_trn, y_val = train_test_split(data, y, train_size=0.8, random_state=0)
+
+# %%
+strat_k_folds = StratifiedKFold(n_splits=10)
 
 # %%
 # model_num, accuracy, f1_score, precision, recall
