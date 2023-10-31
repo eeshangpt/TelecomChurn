@@ -16,8 +16,8 @@
 # %% [markdown] papermill={"duration": 0.036252, "end_time": "2021-08-13T07:16:36.548737", "exception": false, "start_time": "2021-08-13T07:16:36.512485", "status": "completed"}
 # # Telecom Churn Prediction - Starter Notebook
 #
-# **Author:** Eeshan Gupta  
-# eeshangpt@gmail.com
+# **Authors:** Eeshan Gupta  | Ashish Parmar <br/>
+# eeshangpt@gmail.com | parmara266@gmail.com
 
 # %% [markdown]
 # ## Table of Content
@@ -70,34 +70,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-# %%
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-
-# %%
 from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression, Lasso
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
+from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.svm import SVC, LinearSVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
-
-# %%
-from pprint import pprint
-
-# %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
-# from sklearn.impute import SimpleImputer
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.model_selection import train_test_split
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.decomposition import PCA
-# from sklearn.manifold import TSNE
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.pipeline import Pipeline
-# from sklearn.model_selection import GridSearchCV
-# from sklearn.metrics import confusion_matrix, precision_score, recall_score
 
 # %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
 np.random.seed(0)
@@ -133,12 +114,18 @@ print(data_dict.shape)
 # %%
 data.head()
 
+# %% [markdown]
+# ### Missing Value Analysis
+
+# %% [markdown]
+# Finding columns with more than 50% of values as missing
+
 # %%
 empty_columns = data.columns[(data.isna().sum(axis=0) / data.shape[0]) > .50].tolist()
 empty_columns
 
 # %% [markdown]
-# Dropping columns with >50% missing values
+# Dropping columns with more than 50% missing values
 
 # %%
 usable_columns = [i for i in data.columns if i not in empty_columns]
@@ -155,10 +142,7 @@ unseen = unseen[usable_columns]
 unseen.head()
 
 # %% [markdown]
-# Null Value Analysis  
-#
-#
-# for training data
+# Missing Value Analysis for training data
 
 # %%
 pd.DataFrame([(i, data[i].dtype, data[i].isna().sum(), data[i].nunique()) 
@@ -166,7 +150,7 @@ pd.DataFrame([(i, data[i].dtype, data[i].isna().sum(), data[i].nunique())
              columns=['name', 'type', 'num_null', 'num_unique'])
 
 # %% [markdown]
-# for testing data
+# Missing Value Analysis for testing data
 
 # %%
 pd.DataFrame([(i, unseen[i].dtype, unseen[i].isna().sum(), unseen[i].nunique())
@@ -174,7 +158,7 @@ pd.DataFrame([(i, unseen[i].dtype, unseen[i].isna().sum(), unseen[i].nunique())
              columns=['name', 'type', 'num_null', 'num_unique'])
 
 # %% [markdown]
-# Removing columns with only 1 value
+# Dropping columns with only 1 value
 
 # %%
 single_value_columns = [i for i in usable_columns
@@ -184,6 +168,9 @@ usable_columns = [i for i in usable_columns
 data = data[usable_columns]
 unseen = unseen[usable_columns]
 del single_value_columns
+
+# %% [markdown]
+# Cleaning date columns
 
 # %%
 date_columns = data.columns[data.columns.str.contains('date')].tolist()
@@ -200,7 +187,7 @@ unseen = unseen[usable_columns + date_columns]
 # %%
 data.describe()
 
-# %% [markdown]
+# %% [raw]
 # ### ASDAASD
 
 # %% [markdown]
@@ -220,7 +207,7 @@ y.value_counts() * 100 / y.value_counts().sum()
 # There is a huge imbalance among the customers who have and haven't churned. ~90% have not churned out while only ~10% churned.
 
 # %% [markdown]
-# ### ASDAASD
+# #### Imputing missing values
 
 # %%
 imputer = SimpleImputer(strategy='median')
@@ -230,6 +217,9 @@ unseen[usable_columns] = imputer.transform(unseen[usable_columns])
 # %%
 for i in date_columns:
     data[i].fillna(data[i].median(), inplace=True)
+
+# %% [markdown]
+# Scaling the values.
 
 # %%
 minmax_scaler = MinMaxScaler()
@@ -247,6 +237,11 @@ unseen.iloc[:, 1:] = scaler.transform(unseen.iloc[:, 1:])
 
 # %%
 data.head()
+
+# %% [markdown]
+# ### Outlier analysis
+#
+# Calculating the (+/-) 3 standard deviations for outlier ananlysis
 
 # %%
 scaled_check = []
@@ -273,83 +268,65 @@ y = y[pd.Series(a) < 10]
 # %%
 data.head()
 
-# %% [raw]
-# models = [
-#     RandomForestClassifier(n_estimators=50, min_samples_leaf=10,
-#                            min_samples_split=20, verbose=True,
-#                            class_weight='balanced', random_state=0,
-#                            n_jobs=-4),
-#     RandomForestClassifier(verbose=True, random_state=0, n_jobs=-4),
-#     
-# ]
+# %% [markdown]
+# Next piece of code is implements GridSearchCV for different models for different parameters. The code is commented since it takes a lot of time.  
 
 # %%
-# ?GradientBoostingClassifier
+# models = {
+#     4: [
+#         SVC(),
+#         {
+#             'kernel' : ['linear', 'poly', 'rbf', 'sigmoid'],
+#             'degree': [3, 5, 7, 9, 10],
+#             'gamma': ['scale', 'auto'],
+#             'probability': [True],
+#             'class_weight': ['balanced']
+#         }
+#     ],
+#     3 : [
+#         GradientBoostingClassifier(),
+#         {
+#             "loss": ['log_loss', 'exponential'],
+#             "learning_rate": list(set(np.linspace(0, 1, 6).tolist() + np.linspace(0, 10, 6).tolist())),
+#             "n_estimators": [100, 200, 300, 500],
+#         }
+#     ],
+#     2: [
+#         LogisticRegression(),
+#         {
+#             'penalty': ['l1', 'l2', None],
+#             'class_weight': ['balanced', None],
+#         }
+#     ],
+#     1: [
+#         RandomForestClassifier(), dict()
+#         {
+#             "n_estimators": [100, 200, 500],
+#             "criterion": ['gini'],
+#             "min_samples_split": [5, 10],
+#             "min_samples_leaf": [5, 9],
+#             "bootstrap": [True],
+#             "oob_score": [f1_score],
+#             "class_weight": ["balanced", None],
+#             "n_jobs": [2]
+#         }
+#     ], 
+# }
 
-# %%
-{
-            "loss": ['log_loss', 'exponential'],
-            "learning_rate": list(set(np.linspace(0, 1, 6).tolist() + np.linspace(0, 10, 6).tolist()))
-        }
+# pca_model = PCA(n_components=0.95)
+# x_trn, x_val, y_trn, y_val = train_test_split(data, y)
+# pca_x_trn = pca_model.fit_transform(x_trn.iloc[:, 1:])
+# pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
 
-# %%
-models = {
-    4: [
-        SVC(),
-        {
-            'kernel' : ['linear', 'poly', 'rbf', 'sigmoid'],
-            'degree': [3, 5, 7, 9, 10],
-            'gamma': ['scale', 'auto'],
-            'probability': [True],
-            'class_weight': ['balanced']
-        }
-    ],
-    3 : [
-        GradientBoostingClassifier(),
-        {
-            "loss": ['log_loss', 'exponential'],
-            "learning_rate": list(set(np.linspace(0, 1, 6).tolist() + np.linspace(0, 10, 6).tolist())),
-            "n_estimators": [100, 200, 300, 500],
-        }
-    ],
-    2: [
-        LogisticRegression(),
-        {
-            'penalty': ['l1', 'l2', None],
-            'class_weight': ['balanced', None],
-        }
-    ],
-    1: [
-        RandomForestClassifier(), dict()
-        {
-            "n_estimators": [100, 200, 500],
-            "criterion": ['gini'],
-            "min_samples_split": [5, 10],
-            "min_samples_leaf": [5, 9],
-            "bootstrap": [True],
-            "oob_score": [f1_score],
-            "class_weight": ["balanced", None],
-            "n_jobs": [2]
-        }
-    ], 
-}
-
-# %%
-pca_model = PCA(n_components=0.95)
-x_trn, x_val, y_trn, y_val = train_test_split(data, y)
-pca_x_trn = pca_model.fit_transform(x_trn.iloc[:, 1:])
-pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
-
-# %%
-for model_id, model_details in models.items():
-    clf = GridSearchCV(estimator=model_details[0],
-                       param_grid=model_details[1],
-                       scoring='f1',
-                       n_jobs=4, verbose=True)
-    clf.fit(pca_x_trn, y_trn)
-    print('==========', model_id, sep='\n')
-    print(f"{clf.best_params_}", f"{clf.best_score_}", sep='\n')
-    print("==========")
+# for model_id, model_details in models.items():
+#     clf = GridSearchCV(estimator=model_details[0],
+#                        param_grid=model_details[1],
+#                        scoring='f1',
+#                        n_jobs=4, verbose=True)
+#     clf.fit(pca_x_trn, y_trn)
+#     print('==========', model_id, sep='\n')
+#     print(f"{clf.best_params_}", f"{clf.best_score_}", sep='\n')
+#     print("==========")
 
 # %%
 models = [
@@ -372,6 +349,7 @@ pca_n_com_s = np.linspace(0.75, 1., num=6)
 pca_n_com = pca_n_com_s[-2]
 overall_results = []
 for i, model in enumerate(models):
+    print(i)
     cross_validation_results = []
     for itr, (trn, val) in enumerate(strat_k_folds.split(data, y)):
         x_trn, y_trn = data.iloc[trn, 1:], y.iloc[trn]
