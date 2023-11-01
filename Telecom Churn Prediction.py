@@ -80,6 +80,9 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.svm import SVC, LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
+# %%
+from tqdm import tqdm
+
 # %% papermill={"duration": 1.362112, "end_time": "2021-08-13T07:16:38.158342", "exception": false, "start_time": "2021-08-13T07:16:36.796230", "status": "completed"}
 np.random.seed(0)
 warnings.filterwarnings('ignore')
@@ -271,7 +274,7 @@ data.head()
 # %% [markdown]
 # Next piece of code is implements GridSearchCV for different models for different parameters. The code is commented since it takes a lot of time.  
 
-# %%
+# %% [raw]
 # models = {
 #     4: [
 #         SVC(),
@@ -299,7 +302,7 @@ data.head()
 #         }
 #     ],
 #     1: [
-#         RandomForestClassifier(), dict()
+#         RandomForestClassifier(),
 #         {
 #             "n_estimators": [100, 200, 500],
 #             "criterion": ['gini'],
@@ -312,113 +315,110 @@ data.head()
 #         }
 #     ], 
 # }
-
+#
 # pca_model = PCA(n_components=0.95)
 # x_trn, x_val, y_trn, y_val = train_test_split(data, y)
 # pca_x_trn = pca_model.fit_transform(x_trn.iloc[:, 1:])
 # pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
-
+#
 # for model_id, model_details in models.items():
-#     clf = GridSearchCV(estimator=model_details[0],
-#                        param_grid=model_details[1],
-#                        scoring='f1',
-#                        n_jobs=4, verbose=True)
+#     # clf = GridSearchCV(estimator=model_details[0],
+#     #                    param_grid=model_details[1],
+#     #                    scoring='f1',
+#     #                    n_jobs=4, verbose=True)
+#     clf = model_details[0]
 #     clf.fit(pca_x_trn, y_trn)
+#     pred = clf.predict(pca_x_val)
 #     print('==========', model_id, sep='\n')
-#     print(f"{clf.best_params_}", f"{clf.best_score_}", sep='\n')
+#     print(clf, accuracy_score(y_val, pred), f1_score(y_val, pred), sep='\t')
 #     print("==========")
+#
+# del clf
 
 # %%
-models = [
-    RandomForestClassifier(
-        bootstrap=True, class_weight='balanced', criterion='gini',
-        min_samples_leaf=9, min_samples_split=10,
-        n_estimators=100, oob_score=f1_score
-    )
-]
 
-# %%
+model = SVC()
+
 X_trn, X_val, y_trn, y_val = train_test_split(data, y, train_size=0.8, random_state=0)
 
-# %%
 strat_k_folds = StratifiedKFold(n_splits=10)
 
-# %%
-# model_num, accuracy, f1_score, precision, recall
 pca_n_com_s = np.linspace(0.75, 1., num=6)
 pca_n_com = pca_n_com_s[-2]
 overall_results = []
-for i, model in enumerate(models):
+for i, pca_n_com in enumerate(pca_n_com_s):
     print(i)
     cross_validation_results = []
-    for itr, (trn, val) in enumerate(strat_k_folds.split(data, y)):
-        x_trn, y_trn = data.iloc[trn, 1:], y.iloc[trn]
-        x_val, y_val = data.iloc[val, 1:], y.iloc[val]
-        pca_model = PCA(n_components=pca_n_com)
-        pca_x_trn = pca_model.fit_transform(x_trn.iloc[:, 1:])
-        pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
-        model.fit(pca_x_trn, y_trn)
-        pred = model.predict(pca_x_val)
-        
-        cross_validation_results.append([accuracy_score(y_val, pred),
-                                         f1_score(y_val, pred),
-                                         precision_score(y_val, pred),
-                                         recall_score(y_val, pred)])
-    cross_validation_results = np.array(cross_validation_results).mean(axis=0).tolist()
-    overall_results.append([i] + cross_validation_results)
-overall_results
-
-# %% [raw]
-# n_c = 0.95
-#
-# pca_model = PCA(n_components=n_c)
-#
-# pca_x_trn = pca_model.fit_transform(X_trn.iloc[:, 1:])
-# pca_x_val = pca_model.transform(X_val.iloc[:, 1:])
-#
-# unseen_pca = pca_model.transform(unseen.iloc[:, 1:])
-#
-# pca_x_trn.shape, pca_x_val.shape, unseen_pca.shape
-#
-# model = SVC(class_weight='balanced')
-#
-# model.fit(pca_x_trn, y_trn)
-#
-# y_val_preds = model.predict(pca_x_val)
-#
-#
-#
-# accuracy_score(y_val, y_val_preds)
-#
-# f1_score(y_val, y_val_preds)
-#
-# y_tst_pred = model.predict(unseen_pca)
-#
-# y_unseen = sample['churn_probability']
-#
-# accuracy_score(y_unseen, y_tst_pred)
-#
-# f1_score(y_unseen, y_tst_pred)
-#
-# precision_score(y_unseen, y_tst_pred)
-#
-# recall_score(y_unseen, y_tst_pred)
-#
-# tn, fp, fn, tp =  confusion_matrix(y_unseen, y_tst_pred).ravel()
-#
-# tn
-#
-# tp
-#
-# fn
-#
-# fp
+    if pca_n_com != 1.:
+        for (trn, val) in tqdm(strat_k_folds.split(data, y)):
+            x_trn, y_trn = data.iloc[trn, 1:], y.iloc[trn]
+            x_val, y_val = data.iloc[val, 1:], y.iloc[val]
+            pca_model = PCA(n_components=pca_n_com)
+            pca_x_trn = pca_model.fit_transform(x_trn.iloc[:, 1:])
+            pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
+            model.fit(pca_x_trn, y_trn)
+            pred = model.predict(pca_x_val)
+            
+            cross_validation_results.append([accuracy_score(y_val, pred),
+                                             f1_score(y_val, pred),
+                                             precision_score(y_val, pred),
+                                             recall_score(y_val, pred)])
+        cross_validation_results = np.array(cross_validation_results).mean(axis=0).tolist()
+        overall_results.append([i] + cross_validation_results)
+overall_results = pd.DataFrame(overall_results, columns=["model_num",
+                                                         "accuracy", 
+                                                         "f1_score", 
+                                                         "precision", 
+                                                         "recall"])
 
 # %%
-pd.DataFrame(overall_results, columns=["model_num",
-                                       "accuracy", 
-                                       "f1_score", 
-                                       "precision", 
-                                       "recall"])
+n_comp = pca_n_com_s[4]
+
+# %%
+svm_params = {
+    'C': sorted(set(np.floor(np.linspace(1, 100, 6)).tolist())),
+    'kernel': ['linear', 'poly', 'rbf'],
+    'degree': [3, 4, 5],
+}
+model = SVC()
+
+# %%
+pca_model = PCA(n_components=n_comp)
+
+x_trn, x_val, y_trn, y_val = train_test_split(data, y, test_size=0.2, random_state=0)
+
+pca_x_trn = pca_model.fit_transform(x_trn.iloc[:, 1:])
+pca_x_val = pca_model.transform(x_val.iloc[:, 1:])
+
+# %%
+gs_mod = GridSearchCV(estimator=model, param_grid= svm_params,
+                      n_jobs=-5, return_train_score=True,
+                      cv=2, verbose=3)
+gs_mod.fit(pca_x_trn, y_trn)
+
+# %%
+svc_model = SVC(C=1, kernel='rbf', gamma='scale', random_state=0)
+
+# %%
+svc_model.fit(pca_x_trn, y_trn)
+
+# %%
+y_pred = svc_model.predict(pca_x_val)
+
+# %%
+accuracy_score(y_val, y_pred)
+
+# %%
+test_data = pca_model.transform(unseen.iloc[:, 1:])
+
+# %%
+preds = svc_model.predict(test_data)
+
+# %%
+a = pd.DataFrame([i for i in zip(unseen.iloc[:, 0], preds)],
+                 columns=['id', 'churn_probability']).astype(int)
+
+# %%
+a.to_csv(join(DATA_DIR, 'prediction_1.csv'), index=False)
 
 # %%
